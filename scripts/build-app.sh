@@ -1,6 +1,7 @@
 #!/bin/bash
 # Builds TablePeek.app into ./build. Pass --install to copy it to ~/Applications.
 set -euo pipefail
+export PATH="/Library/TeX/texbin:$PATH"
 cd "$(dirname "$0")/.."
 
 APP=build/TablePeek.app
@@ -28,7 +29,25 @@ if [ ! -f Resources/AppIcon.icns ]; then
 fi
 cp Resources/AppIcon.icns "$APP/Contents/Resources/AppIcon.icns"
 
-codesign --force --sign - "$APP" >/dev/null 2>&1 || true
+# Quick Look extension (Finder spacebar preview). Built with plain swiftc so Xcode isn't needed.
+APPEX="$APP/Contents/PlugIns/TablePeekQL.appex"
+mkdir -p "$APPEX/Contents/MacOS" "$APPEX/Contents/Resources"
+cp QuickLook/Info.plist "$APPEX/Contents/Info.plist"
+swiftc -O -module-name TablePeekQL -parse-as-library -application-extension \
+  -target "$(uname -m)-apple-macos14.0" -sdk "$(xcrun --show-sdk-path)" \
+  Sources/TablePeekCore/LatexScanner.swift Sources/TablePeekCore/InlineConverter.swift \
+  Sources/TablePeekCore/TableParser.swift Sources/TablePeekCore/HTMLRenderer.swift \
+  QuickLook/PreviewProvider.swift \
+  -framework QuickLookUI -Xlinker -e -Xlinker _NSExtensionMain \
+  -o "$APPEX/Contents/MacOS/TablePeekQL"
+LM=$(dirname "$(kpsewhich lmroman10-regular.otf 2>/dev/null || echo /Library/TeX/Root/texmf-dist/fonts/opentype/public/lm/x)")
+for f in lmroman10-regular lmroman10-bold lmroman10-italic lmroman10-bolditalic lmmono10-regular; do
+  [ -f "$LM/$f.otf" ] && cp "$LM/$f.otf" "$APPEX/Contents/Resources/"
+done
+
+# Ad-hoc signing ("Sign to Run Locally"); the extension must be sandboxed.
+codesign --force --sign - --entitlements QuickLook/QuickLook.entitlements "$APPEX"
+codesign --force --sign - "$APP"
 echo "Built $APP"
 
 if [ "${1:-}" = "--install" ]; then
@@ -36,5 +55,7 @@ if [ "${1:-}" = "--install" ]; then
   rm -rf "$HOME/Applications/TablePeek.app"
   cp -R "$APP" "$HOME/Applications/"
   /System/Library/Frameworks/CoreServices.framework/Frameworks/LaunchServices.framework/Support/lsregister -f "$HOME/Applications/TablePeek.app" || true
+  pluginkit -a "$HOME/Applications/TablePeek.app/Contents/PlugIns/TablePeekQL.appex" 2>/dev/null || true
+  qlmanage -r >/dev/null 2>&1 || true
   echo "Installed to ~/Applications/TablePeek.app"
 fi

@@ -7,13 +7,14 @@ A small macOS app for previewing LaTeX tables stored as `.tex` files, with no ma
 - **Cache**: PDFs are stored by content hash in `~/Library/Caches/TablePeek`, so a table you've already seen opens instantly. When you open a folder, its 60 most recently modified files are pre-rendered in the background (2 at a time).
 - **Live reload**: the opened folder is watched with FSEvents. If a script rewrites a table, both views update automatically, and new files appear in the sidebar.
 - **Source view** shows the raw LaTeX.
+- **Finder Quick Look**: select a `.tex` file and press **Space** to see the quick table preview without opening the app. This comes from a Quick Look extension bundled inside the app.
 
 If you select PDF mode while a PDF is still compiling, you see the quick view with a "Compiling…" badge, and it switches over when the PDF is ready. LaTeX errors show as a banner (nonstopmode still produces a PDF) or as a failure page with the log. Line numbers refer to your file.
 
 ## Requirements
 
 - macOS 14+
-- Swift toolchain (Command Line Tools are enough; Xcode is not needed)
+- Swift toolchain (Command Line Tools are enough; Xcode is not needed, not even for the Quick Look extension, which is built with plain `swiftc` and signed ad hoc)
 - A TeX distribution (MacTeX). The app looks in `/Library/TeX/texbin`, `/opt/homebrew/bin`, `/usr/local/bin`.
 
 ## Build & install
@@ -24,6 +25,8 @@ If you select PDF mode while a PDF is still compiling, you see the quick view wi
 ```
 
 During development: `swift run TablePeek path/to/folder-or-file.tex`.
+
+If the spacebar preview doesn't appear after installing, run `qlmanage -r` and relaunch Finder (⌥-right-click its Dock icon → Relaunch). Also check that "TablePeek Quick Look" is enabled under System Settings → General → Login Items & Extensions → Quick Look.
 
 ## Usage
 
@@ -61,6 +64,7 @@ tablepeek-cli --pdf table.tex        # compile (cached) and print the PDF path +
 Sources/TablePeekCore/   parser (LatexScanner, InlineConverter, TableParser), HTMLRenderer, PDFRenderer (compile/cache/crop)
 Sources/TablePeek/       SwiftUI app (AppModel, views, FSEvents watcher)
 Sources/tablepeek-cli/   command-line front end
+QuickLook/               Finder spacebar preview extension (reuses the parser sources)
 Examples/                sample tables
 scripts/                 build-app.sh, make-icon.swift
 ```
@@ -69,4 +73,5 @@ scripts/                 build-app.sh, make-icon.swift
 
 - The quick parser is regex/scanner based. It approximates layout: no decimal alignment for `S`/`D` columns, no `tabularray` (`tblr`) syntax, and macros with complex arguments are dropped and their last argument kept.
 - `\input` paths and graphics resolve relative to the table's own folder.
-- No Finder Quick Look (spacebar) extension, since that needs Xcode to build an app extension.
+- The Quick Look preview only shows the quick (parsed) view, since the sandboxed extension can't run LaTeX.
+- The app is signed ad hoc for local use. To build it on another Mac, run `scripts/build-app.sh`.
