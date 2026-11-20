@@ -95,6 +95,7 @@ enum FontLoader {
 
     private static func fontDirectory() -> URL? {
         let candidates = [
+            Bundle.main.resourcePath ?? "",  // bundled copy (release builds), so no TeX install is needed
             "/Library/TeX/Root/texmf-dist/fonts/opentype/public/lm",
             "/usr/local/texlive/texmf-dist/fonts/opentype/public/lm",
             "/opt/homebrew/share/texmf-dist/fonts/opentype/public/lm",

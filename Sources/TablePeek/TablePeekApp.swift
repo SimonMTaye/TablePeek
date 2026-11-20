@@ -68,7 +68,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         MainActor.assumeIsolated {
             let model = AppModel.shared
             // `TablePeek path/to/file.tex` from the command line
-            let args = CommandLine.arguments.dropFirst().filter { !$0.hasPrefix("-") }
+            // (Only existing paths count, so `-key value` defaults overrides aren't mistaken for files.)
+            let args = CommandLine.arguments.dropFirst()
+                .filter { !$0.hasPrefix("-") && FileManager.default.fileExists(atPath: $0) }
             if let path = args.first {
                 model.open(URL(fileURLWithPath: path, relativeTo: URL(fileURLWithPath: FileManager.default.currentDirectoryPath)))
             } else if !openedViaEvent {
