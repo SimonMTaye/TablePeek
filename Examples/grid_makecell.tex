@@ -1,0 +1,11 @@
+\begin{tabular}{|l|c|r|p{4cm}|}
+\hline
+\textbf{Model} & \makecell{Params\\(M)} & \textit{Acc.} & Comment \\
+\hline\hline
+Baseline & 12 & 71.4 & Plain \texttt{resnet} with default settings -- no tuning. \\
+\hline
+\rowcolor{gray!15} Ours & 14 & \textbf{78.9} & Adds attention $\times 2$ and $\beta$-warmup. \\
+\cline{2-3}
+Ours + aug & 14 & 80.1\textsuperscript{\dag} & ``Heavy'' augmentation \\
+\hline
+\end{tabular}
