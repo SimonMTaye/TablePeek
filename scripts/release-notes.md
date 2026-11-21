@@ -4,7 +4,7 @@ A macOS app for previewing LaTeX `.tex` tables: an instant parsed HTML view, a r
 
 ### Install
 
-1. Download **TablePeek-0.1.0.zip** below, unzip it, and move `TablePeek.app` to `/Applications`.
+1. Download **TablePeek-VERSION.zip** below, unzip it, and move `TablePeek.app` to `/Applications`.
 2. The app isn't notarized by Apple, so the first launch is blocked with "Apple could not verify…". To allow it, either:
    - open **System Settings → Privacy & Security**, scroll down, and click **Open Anyway** next to TablePeek, or
    - run `xattr -dr com.apple.quarantine /Applications/TablePeek.app` in Terminal.

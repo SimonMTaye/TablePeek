@@ -17,5 +17,8 @@ ditto -c -k --keepParent --sequesterRsrc build/TablePeek.app "$ZIP"
 echo "Wrote $ZIP ($(du -h "$ZIP" | cut -f1))"
 
 if [ "${1:-}" = "--publish" ]; then
-  gh release create "v$VERSION" "$ZIP" --title "TablePeek $VERSION" --notes-file scripts/release-notes.md
+  NOTES=$(mktemp)
+  sed "s/VERSION/$VERSION/g" scripts/release-notes.md > "$NOTES"
+  gh release create "v$VERSION" "$ZIP" --title "TablePeek $VERSION" --notes-file "$NOTES"
+  rm -f "$NOTES"
 fi
