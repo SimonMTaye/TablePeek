@@ -12,5 +12,5 @@ A macOS app for previewing LaTeX `.tex` tables: an instant parsed HTML view, a r
 
 ### Requirements
 
-- macOS 14 or later, Apple Silicon or Intel (universal build).
+- macOS 14 or later on an Apple Silicon Mac.
 - A TeX distribution such as [MacTeX](https://tug.org/mactex/) for the PDF view. The quick view and the spacebar preview work without it.

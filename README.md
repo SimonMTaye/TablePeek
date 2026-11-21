@@ -19,7 +19,7 @@ If you select PDF mode while a PDF is still compiling, you see the quick view wi
 
 ## Install
 
-Download the latest `TablePeek-x.y.z.zip` from [Releases](https://github.com/SimonMTaye/TablePeek/releases), unzip it, and move `TablePeek.app` to `/Applications`. It's a universal build (Apple Silicon and Intel) for macOS 14+.
+Download the latest `TablePeek-x.y.z.zip` from [Releases](https://github.com/SimonMTaye/TablePeek/releases), unzip it, and move `TablePeek.app` to `/Applications`. It runs on Apple Silicon Macs with macOS 14+.
 
 The app is signed ad hoc, not notarized, so macOS blocks the first launch ("Apple could not verify…"). Allow it under **System Settings → Privacy & Security → Open Anyway**, or run:
 
@@ -36,7 +36,7 @@ Needs the Swift toolchain. The Command Line Tools are enough; Xcode is not neede
 ```bash
 ./scripts/build-app.sh            # -> build/TablePeek.app
 ./scripts/build-app.sh --install  # also copies to ~/Applications
-./scripts/release.sh              # universal build -> build/TablePeek-<version>.zip
+./scripts/release.sh              # build + zip -> build/TablePeek-<version>.zip
 ./scripts/release.sh --publish    # ...and create the GitHub release (tag v<version>)
 ```
 

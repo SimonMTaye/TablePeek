@@ -1,13 +1,11 @@
 #!/bin/bash
-# Builds TablePeek.app into ./build.
+# Builds TablePeek.app (Apple Silicon) into ./build.
 #   --install    also copy it to ~/Applications and register the Quick Look extension
-#   --universal  build for both arm64 and x86_64 (used for releases)
 set -euo pipefail
-INSTALL=0; ARCHS=("$(uname -m)")
+INSTALL=0
 for a in "$@"; do
   case "$a" in
     --install) INSTALL=1 ;;
-    --universal) ARCHS=(arm64 x86_64) ;;
     *) echo "unknown option $a" >&2; exit 1 ;;
   esac
 done
@@ -15,19 +13,14 @@ export PATH="/Library/TeX/texbin:$PATH"
 cd "$(dirname "$0")/.."
 
 APP=build/TablePeek.app
-TMPBIN=$(mktemp -d)
-for arch in "${ARCHS[@]}"; do
-  swift build -c release --arch "$arch" --product TablePeek
-  swift build -c release --arch "$arch" --product tablepeek-cli
-  BIN=$(swift build -c release --arch "$arch" --show-bin-path)
-  cp "$BIN/TablePeek" "$TMPBIN/TablePeek-$arch"
-  cp "$BIN/tablepeek-cli" "$TMPBIN/tablepeek-cli-$arch"
-done
+swift build -c release --arch arm64 --product TablePeek
+swift build -c release --arch arm64 --product tablepeek-cli
+BIN=$(swift build -c release --arch arm64 --show-bin-path)
 
 rm -rf "$APP"
 mkdir -p "$APP/Contents/MacOS" "$APP/Contents/Resources"
-lipo -create "$TMPBIN"/TablePeek-* -output "$APP/Contents/MacOS/TablePeek"
-lipo -create "$TMPBIN"/tablepeek-cli-* -output "$APP/Contents/MacOS/tablepeek-cli"
+cp "$BIN/TablePeek" "$APP/Contents/MacOS/TablePeek"
+cp "$BIN/tablepeek-cli" "$APP/Contents/MacOS/tablepeek-cli"
 cp Resources/Info.plist "$APP/Contents/Info.plist"
 
 # Icon (generated once, then cached in Resources/)
@@ -48,17 +41,13 @@ cp Resources/AppIcon.icns "$APP/Contents/Resources/AppIcon.icns"
 APPEX="$APP/Contents/PlugIns/TablePeekQL.appex"
 mkdir -p "$APPEX/Contents/MacOS" "$APPEX/Contents/Resources"
 cp QuickLook/Info.plist "$APPEX/Contents/Info.plist"
-for arch in "${ARCHS[@]}"; do
-  swiftc -O -module-name TablePeekQL -parse-as-library -application-extension \
-    -target "$arch-apple-macos14.0" -sdk "$(xcrun --show-sdk-path)" \
-    Sources/TablePeekCore/LatexScanner.swift Sources/TablePeekCore/InlineConverter.swift \
-    Sources/TablePeekCore/TableParser.swift Sources/TablePeekCore/HTMLRenderer.swift \
-    QuickLook/PreviewProvider.swift \
-    -framework QuickLookUI -Xlinker -e -Xlinker _NSExtensionMain \
-    -o "$TMPBIN/TablePeekQL-$arch"
-done
-lipo -create "$TMPBIN"/TablePeekQL-* -output "$APPEX/Contents/MacOS/TablePeekQL"
-rm -rf "$TMPBIN"
+swiftc -O -module-name TablePeekQL -parse-as-library -application-extension \
+  -target arm64-apple-macos14.0 -sdk "$(xcrun --show-sdk-path)" \
+  Sources/TablePeekCore/LatexScanner.swift Sources/TablePeekCore/InlineConverter.swift \
+  Sources/TablePeekCore/TableParser.swift Sources/TablePeekCore/HTMLRenderer.swift \
+  QuickLook/PreviewProvider.swift \
+  -framework QuickLookUI -Xlinker -e -Xlinker _NSExtensionMain \
+  -o "$APPEX/Contents/MacOS/TablePeekQL"
 LM=$(dirname "$(kpsewhich lmroman10-regular.otf 2>/dev/null || echo /Library/TeX/Root/texmf-dist/fonts/opentype/public/lm/x)")
 for f in lmroman10-regular lmroman10-bold lmroman10-italic lmroman10-bolditalic lmmono10-regular; do
   [ -f "$LM/$f.otf" ] && cp "$LM/$f.otf" "$APPEX/Contents/Resources/" && cp "$LM/$f.otf" "$APP/Contents/Resources/"
